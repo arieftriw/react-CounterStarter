@@ -1,11 +1,11 @@
 import { useState } from "react";
-import classnames from "classnames";
 
-import shoppingIcon from "./assets/shopping-icon.svg";
-import plusIcon from "./assets/plus-icon.svg";
-import minusIcon from "./assets/minus-icon.svg";
-
-import "./App.css";
+import Navbar from "./components/Navbar";
+import Container from "./components/Container";
+import Input from "./components/SearchInput";
+import Info from "./components/Info";
+import Todos from "./components/Todos";
+import Empty from "./components/Empty";
 
 function App() {
   const [value, setValue] = useState("");
@@ -15,7 +15,26 @@ function App() {
     { title: "Melon", count: 1 },
   ]);
 
-  const handleSubmit = () => {};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!value) {
+      alert("No blank list");
+      return;
+    }
+
+    const addedTodos = [
+      ...todos,
+      {
+        title: value,
+        count: 1,
+      },
+    ];
+
+    setTodos(addedTodos);
+    setValue("");
+  };
+
   const handleAdditionCount = (index) => {
     const newTodos = [...todos];
 
@@ -27,67 +46,52 @@ function App() {
   const handleSubstractionCount = (index) => {
     const newTodos = [...todos];
 
-    newTodos[index].count = newTodos[index].count - 1;
+    if (newTodos[index].count > 1) {
+      //selama jumlah count > 0 maka lakukan pengurangan
+      newTodos[index].count = newTodos[index].count - 1;
+    } else {
+      //jika jumlah count < 0 maka hapus index yang di 0 kan
+      newTodos.splice(index, 1);
+    }
+
     setTodos(newTodos);
+  };
+
+  const getTotalCount = () => {
+    const totalCount = todos.reduce((total, num) => {
+      return total + num.count;
+    }, 0);
+
+    return totalCount;
   };
 
   return (
     <>
-      <nav className="nav">
-        <img className="nav-icon" src={shoppingIcon} alt="shopping icon" />
-        <h1 className="nav-title">Shopping List</h1>
-      </nav>
+      <Navbar />
 
-      <section className="container">
-        <form className="form">
-          <input
-            onChange={(e) => {
-              setValue(e.target.value);
-            }}
-            value={value}
-            className="input"
-            type="text"
-            placeholder="list"
-          />
-          <button className="add-button" type="submit">
-            Add
-          </button>
-        </form>
+      <Container>
+        <Input
+          onSubmit={handleSubmit}
+          onChange={(e) => setValue(e.target.value)}
+          value={value}
+        />
+
+        <Info
+          todosLength={todos.length}
+          totalCounts={getTotalCount()}
+          onDelete={() => setTodos([])}
+        />
 
         {todos.length > 0 ? (
-          <div className="todos">
-            {todos.map((todo, index, arr) => {
-              return (
-                <div
-                  key={index}
-                  className={`todo ${
-                    !(arr.length === index + 1) && "todo-divider"
-                  }`}
-                >
-                  {todo.title}
-                  <div className="todo-icon-wrapper">
-                    <div className="todo-count">{todo.count}</div>
-                    <button
-                      onClick={() => handleSubstractionCount(index)}
-                      className="todo-action-button"
-                    >
-                      <img src={minusIcon} alt="minus icon" />
-                    </button>
-                    <button
-                      onClick={() => handleAdditionCount(index)}
-                      className="todo-action-button"
-                    >
-                      <img src={plusIcon} alt="plus icon" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <Todos
+            todos={todos}
+            onSubtraction={(index) => handleSubstractionCount(index)}
+            onAddition={(index) => handleAdditionCount(index)}
+          />
         ) : (
-          <div></div>
+          <Empty />
         )}
-      </section>
+      </Container>
     </>
   );
 }
